@@ -16,7 +16,7 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0  # Required for blame data in SonarCloud
+          fetch-depth: 0 
 
       - name: Set up JDK 17
         uses: actions/setup-java@v3
@@ -30,6 +30,13 @@ jobs:
           path: ~/.sonar/cache
           key: ${{ runner.os }}-sonar
 
+      - name: Debug — List Java files
+        run: |
+          echo "Checking code-smells"
+          find code-smells/src/main/java -name "*.java"
+          echo "Checking refactored"
+          find refactored/src/main/java -name "*.java"
+
       - name: Compile Java files
         run: |
           mkdir -p out
@@ -40,4 +47,12 @@ jobs:
       - name: Download SonarScanner CLI
         run: |
           curl -sSLo sonar-scanner-cli.zip https://binaries.sonarsource.com/Distribution/sonar-scanner-cli/sonar-scanner-cli-5.0.1.3006-linux.zip
-          unzip sonar
+          unzip sonar-scanner-cli.zip
+          mv sonar-scanner-* sonar-scanner
+
+      - name: Run SonarCloud analysis
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        run: |
+          ./sonar-scanner/bin/sonar-scanner \
+            -Dsonar.login=${{ secrets.SONAR_TOKEN }}
